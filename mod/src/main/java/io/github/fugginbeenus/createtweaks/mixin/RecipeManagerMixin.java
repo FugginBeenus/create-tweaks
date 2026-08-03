@@ -28,7 +28,7 @@ public class RecipeManagerMixin {
             }
         }
 
-        if (removed > 0) CreateTweaks.LOGGER.info("Removed {} recipes", removed);
+        CreateTweaks.LOGGER.info("Removed {} of {} recipes", removed, recipes.size());
         return kept;
     }
 }

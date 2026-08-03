@@ -26,8 +26,8 @@ public final class Config {
     }
 
     private static Config load() {
-        Path path = FabricLoader.getInstance().getConfigDir().resolve("createtweaks.json");
         try {
+            Path path = FabricLoader.getInstance().getConfigDir().resolve("createtweaks.json");
             if (Files.exists(path)) {
                 Config loaded = GSON.fromJson(Files.readString(path), Config.class);
                 if (loaded != null) return loaded;
@@ -36,7 +36,7 @@ public final class Config {
             Files.writeString(path, GSON.toJson(fresh));
             return fresh;
         } catch (IOException | RuntimeException e) {
-            CreateTweaks.LOGGER.error("Could not read {}, using defaults", path, e);
+            CreateTweaks.LOGGER.warn("Using default config: {}", e.toString());
             return new Config();
         }
     }
