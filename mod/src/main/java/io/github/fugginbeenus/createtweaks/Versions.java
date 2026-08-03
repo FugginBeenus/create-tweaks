@@ -3,10 +3,6 @@ package io.github.fugginbeenus.createtweaks;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Everything that changes when Create or Minecraft changes. Adding a new target version should
- * only require editing this file.
- */
 public final class Versions {
     private Versions() {}
 
@@ -29,10 +25,6 @@ public final class Versions {
             "create:mechanical_arm",
             "create:mechanical_harvester");
 
-    /**
-     * Ore blocks that Create crushes directly by item id rather than through a tag. Modded ores
-     * reach the filter as {@code #c:*_ores} tags and need no entry here.
-     */
     public static final Set<String> ORE_ITEMS = Set.of(
             "minecraft:coal_ore", "minecraft:deepslate_coal_ore",
             "minecraft:copper_ore", "minecraft:deepslate_copper_ore",
@@ -45,6 +37,5 @@ public final class Versions {
             "minecraft:nether_quartz_ore",
             "create:zinc_ore", "create:deepslate_zinc_ore");
 
-    /** In no ore tag, but yields 18 gold nuggets. */
     public static final Set<String> EXTRA_ORES = Set.of("minecraft:gilded_blackstone");
 }

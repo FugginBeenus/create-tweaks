@@ -33,6 +33,23 @@ The devos maven stops at `6.0.7.0+mc1.20.1-build.1716`; `6.0.8.1` ships on Modri
 published to maven. This only affects the dev environment, since the mod references exactly one Create
 class by name and compiles against none.
 
+## Publishing
+
+`./gradlew modrinth` uploads the remapped jar and sources to the project named by `modrinth_project` in
+`gradle.properties`.
+
+The token is read from `MODRINTH_TOKEN` in the environment, or failing that from a `modrinthToken` property
+in your **user** Gradle properties:
+
+```
+~/.gradle/gradle.properties
+```
+
+That file is outside the repository, so the token cannot be committed by accident. Keep it mode 600. Never
+put the token in this project's `gradle.properties`, which is tracked.
+
+The task fails with a clear message if no token is found, rather than a bare 401 from the API.
+
 ## Running
 
 **`./gradlew runClient` works.** Use it.

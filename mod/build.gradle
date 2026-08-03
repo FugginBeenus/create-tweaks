@@ -51,8 +51,11 @@ java {
     toolchain { languageVersion = JavaLanguageVersion.of(17) }
 }
 
+def modrinthToken = providers.environmentVariable('MODRINTH_TOKEN')
+        .orElse(providers.gradleProperty('modrinthToken'))
+
 modrinth {
-    token = System.getenv('MODRINTH_TOKEN')
+    token = modrinthToken.getOrNull()
     projectId = project.modrinth_project
     versionNumber = project.mod_version
     versionName = "Create Tweaks ${project.mod_version}"
@@ -68,4 +71,13 @@ modrinth {
     }
 }
 
-tasks.modrinth.dependsOn tasks.build
+tasks.modrinth {
+    dependsOn tasks.build
+    doFirst {
+        if (!modrinthToken.isPresent()) {
+            throw new GradleException('No Modrinth token. Put modrinthToken=... in ' +
+                    "${System.getProperty('user.home')}/.gradle/gradle.properties, " +
+                    'or set MODRINTH_TOKEN in the environment.')
+        }
+    }
+}
