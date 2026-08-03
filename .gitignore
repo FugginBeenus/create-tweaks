@@ -7,3 +7,6 @@ test-plan.md
 mod/build/
 mod/run/
 mod/.gradle/
+.idea/
+optional/
+__pycache__/

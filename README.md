@@ -1,237 +1,147 @@
 # Create Tweaks
 
-A drop-in rebalance for the Create mod, aimed at long-running multiplayer servers where Create has quietly become the whole economy.
+A Fabric mod that rebalances the Create mod for long-running multiplayer servers.
 
-If your server has hit the point where one player's contraption is eating the terrain, ore is worthless because everyone is doubling it, and someone has printed a downloaded megabuild overnight, this fixes those four problems and leaves the rest of Create alone.
+If your server has reached the point where one player's contraption is eating the terrain, ore is worthless
+because everyone doubles it, and a Deployer is quietly running a mob farm nobody has visited in a month, this
+fixes those problems and leaves the rest of Create alone.
 
-Create stays a processing, logistics, and rail mod. It stops being an automation mod.
+Create stays a processing, logistics and rail mod. It stops being an automation mod.
 
 ## The rule this is built on
 
 Nothing self-perpetuates. A machine has to be started and fed by a player.
 
-The test for any block: if a player builds this, walks away, and comes back in a week, is there more stuff than when they left? If yes, it changes.
+The test for any block: if a player builds this, walks away, and comes back in a week, is there more stuff
+than when they left? If yes, it changes.
 
-Three things were treated as untouchable and all still work exactly as they do in stock Create:
+Three things are treated as untouchable and all work exactly as they do in stock Create:
 
-1. Trains, monorails, stations, signals, and schedules.
+1. Trains, monorails, stations, signals and schedules.
 2. Basic contraptions. Elevators, doors, drawbridges, windmills, rotating builds.
 3. Quality of life. Toolbox, goggles, wrench, belts, funnels, vaults, decorative blocks.
 
-## Requirements
+## Requires
 
-Built and verified against:
+Minecraft 1.20.1, Fabric, Create 6.0.x, Fabric API. Java 17.
 
-| | |
-|---|---|
-| Minecraft | 1.20.1 |
-| Loader | Fabric |
-| Create | 6.0.8.1 |
-| Fabric API | 0.92.11 |
+This is the only version the Create Fabric port supports in any meaningful sense. Create Fabric ships for
+1.18.2, 1.19.2 and 1.20.1 only, and 1.20.1 is 86% of its downloads and the only line still receiving
+releases. There has never been a 1.21.1 Fabric release.
 
-No other mods are required. Fabric API is needed for the resource conditions the recipe removals use, and Create already depends on it.
+## What it changes
 
-It should work on any Create 6.0.x. On Create 0.5.x the block and tag names are the same but several recipe paths are not, so check before assuming.
+Everything below is individually toggleable in `config/createtweaks.json`.
 
-This is a Fabric pack. The two tag files and the config caps are loader neutral, but the 36 recipe removals use `fabric:load_conditions`, and the equivalent on Forge or NeoForge is spelled differently. Everything except the recipe removals works unchanged on other loaders. Porting them is mechanical, since all 36 files are byte-identical apart from their path.
+### Actors are stationary only
 
-## Install
+The Mechanical Drill, Mechanical Saw, Mechanical Harvester and Deployer are added to `create:non_movable`.
+A contraption containing one refuses to assemble and the player gets a message naming the block and its
+coordinates.
 
-There are two parts. The datapack is the bulk of it. The config caps are four lines you edit by hand, because a datapack cannot reach a `.toml` file.
+This ends contraption quarries, world-eater drills, mobile tree farms, mobile crop farms and every mobile
+deployer farm. All four keep their normal stationary behaviour.
 
-### Part 1, the datapack
+Left movable on purpose: the Mechanical Roller places blocks rather than removing them and is how you build
+roadbed and rail embankments. The Mechanical Plough only tills and pushes entities. The Portable Storage and
+Fluid Interfaces are how trains load freight, and with the actors above blocked they can only move cargo a
+player put there.
 
-Drop `create-tweaks-1.0.zip` into either place. Do not unzip it.
+### The Deployer cannot attack
 
-**`world/datapacks/`** is the normal way and works on any server. It applies to that one world and is enabled automatically on the next load. Confirm with `/datapack list`.
+A Deployer with a sword and a fan is a mob farm that runs forever with nobody present. It now deals no damage
+to living entities.
 
-**`config/paxi/datapacks/`** is worth it if you already run [Paxi](https://modrinth.com/mod/paxi). Paxi loads datapacks globally rather than per world, so the pack survives a world reset and applies to every world on the server. Paxi accepts the zip as-is.
+Everything else about the Deployer is untouched: item application, sequenced assembly, block placing, right
+clicking, and its role in making Train Track and Precision Mechanism. The Deployer keeps its recipe because
+removing it would remove trains.
 
-Paxi loads silently, with no startup log line confirming success, so `/datapack list` in game is the only way to check either path. Note that this folder is inside `config/`, not the game directory root. A `datapacks` folder at the top level of a profile or server directory is not read by anything.
+### No ore doubling
 
-Either way, restart the server afterwards.
+Crushing recipes that turn an ore block into more product than mining it by hand are removed.
 
-### Part 2, the config caps
-
-Apply the values under "Megabuild caps" below to `config/create-server.toml` and, if you run Effortless Building, `config/effortless.toml`.
-
-This part is optional and independent. The datapack works without it. Skipping it leaves schematic imports uncapped, which on most servers is the loudest complaint of the four problems this pack addresses.
-
-### Clients
-
-Clients do not need to install anything.
-
-## What changes
-
-### 1. Actors are stationary only
-
-`data/create/tags/blocks/non_movable.json`
-
-Adds four blocks to a tag Create already ships:
+The match is semantic, not by recipe id:
 
 ```
-create:mechanical_drill
-create:mechanical_saw
-create:mechanical_harvester
-create:deployer
+type is create:crushing
+AND the single ingredient is ore-like
+      the item is a known ore, or the tag ends _ores and does not start raw_
+AND the expected count of the primary product is greater than 1
 ```
 
-Create refuses to assemble a contraption containing a block in `non_movable`. A player who glues a drill to a piston gets a message naming the block and its coordinates, so there is nothing to explain in a rules channel.
+This covers ores from mods that are not installed yet, and does not care if Create renames a recipe file.
+Validated against Create 6.0.8.1: 201 crushing recipes, 35 matched, no false positives.
 
-This is the main change and it does a lot of work in one file. It ends contraption quarries, world eater drills, mobile tree farms, mobile crop farms, and every mobile deployer farm. All four blocks keep their recipe, their crafting tree, and their normal stationary behaviour.
+Everything 1:1 survives, which is most of what Crushing Wheels do. Raw materials, raw blocks (nine crushed
+from a block of nine is not a bonus), the Create `-site` stones, all recycling recipes, gravel, netherrack,
+obsidian, blaze rods, amethyst and wool.
 
-Deliberately left movable:
+Zinc still works. Only the zinc *ore* recipes go; raw zinc still crushes 1:1 and both zinc furnace recipes
+are untouched, so brass and trains are reachable from scratch.
 
-- `create:mechanical_roller` places blocks instead of removing them. It is a construction tool and it is how you build roadbed and rail embankments.
-- `create:mechanical_plough` only tills soil and pushes entities. With the harvester gone it cannot form a farm on its own.
-- `create:portable_storage_interface` and `create:portable_fluid_interface` are how trains load freight. With the actors above blocked, they can only move cargo a player put there.
+### No auto-crafting brain
 
-To loosen: delete a line from the tag file. To turn the whole thing off, delete the file.
+The Factory Gauge and Redstone Requester lose their recipes. The Packager, Re-packager, Stock Link, Stock
+Ticker and Package Frogport all still work, so a player can walk up and request items from a warehouse by
+hand.
 
-### 2. No auto-crafting brain
+The Gauge is what schedules crafting with no player present and the Requester is what fires it off a redstone
+pulse. Those two are the automation, the rest is logistics.
 
-Removes the crafting recipes for `create:factory_gauge` and `create:redstone_requester`.
+### Mechanical Arm and Mechanical Harvester removed
 
-Still working: Packager, Re-packager, Stock Link, Stock Ticker, Package Frogport.
+The Arm routes items between machines with no player involved.
 
-The reasoning is that the Stock Ticker lets a player walk up and request items from a warehouse, which is quality of life worth keeping. The Factory Gauge is what schedules crafting to a target stock level with no player present, and the Redstone Requester is what fires an order off a redstone pulse. Those two are the automation. The rest is logistics.
+The Harvester only functions as a contraption actor. Its block entity is not kinetic, it takes no rotation
+and it does nothing at all placed on its own, so once it is blocked from contraptions there is no working use
+left and leaving it craftable would only be a trap.
 
-The Stock Ticker can still place a one-off craft order through JEI's recipe transfer button. That takes a player click per order. It has no timer, no repeat, and no way to trigger itself.
+Both are also hidden from the creative menu, along with the Gauge and Requester.
 
-Also removes the two `_clear` recipes, which only reset a placed gauge or requester and would otherwise show in JEI as recipes for items you cannot obtain.
+### No infinite lava
 
-To loosen: delete the six files under `data/create/recipes/crafting/logistics/`.
+A Hose Pulley over a Nether lava lake is unlimited free fuel. Only water drains forever now, so boilers and
+therefore trains keep working.
 
-### 3. No ore doubling
+## Not covered
 
-Removes 30 crushing recipes. Every one of them turns an ore block into more of its product than mining that ore by hand would give you.
+The stationary Drill still makes cobblestone. Create ships a dedicated optimisation for cobble generators.
+It is localized and does not consume terrain.
 
-| | Crushed | Mined by hand |
-|---|---|---|
-| Iron ore | 1.75 | 1 |
-| Deepslate iron ore | 2.25 | 1 |
-| Copper ore | 5.25 | 2 to 5 |
-| Lapis ore | 10.5 | 4 to 9 |
-| Nether gold ore | 18 nuggets | 2 to 6 nuggets |
+The Encased Fan still does bulk washing, smoking and blasting, and still kills mobs pushed into it.
 
-This is more surgical than it sounds, because the multiplication lives entirely in the ore recipes and nowhere else in the chain. Everything downstream is one to one and is untouched:
+Schematic and Effortless Building limits are config values in those mods, not something a Create addon should
+reach into. If megabuild imports are a problem on your server, cap `maxTotalSchematicSize` in
+`create-server.toml`; the stock value of 100000 accepts roughly 100 MB uploads.
 
-- `crushing/raw_iron.json` and every other raw metal: 1 raw to 1 crushed.
-- `crushing/raw_iron_block.json` and friends: 9 crushed from a block of 9. Not a bonus.
-- `blasting/iron_ingot_from_crushed.json`: 1 crushed to 1 ingot.
-- `splashing/crushed_raw_iron.json`: 1 ingot worth of nuggets, plus redstone as a side product.
+## Config
 
-These recipes are removed rather than rebalanced to one to one, so an ore block put into Crushing Wheels now does nothing. That costs nothing in practice: ore blocks still smelt to one ingot in a furnace, and without Silk Touch you get raw ore rather than the block anyway. The normal Create route is unchanged, mine the ore, crush the raw at one to one or smelt it directly.
-
-Crushing Wheels and the Millstone keep working for everything else, which is most of what they do: gravel, netherrack, obsidian, blaze rods, amethyst, wool, the Create stone types, and all the recycling recipes.
-
-Zinc still works. Zinc is Create's own ore and the whole brass and train progression sits on it, so it was checked specifically. Only `crushing/zinc_ore.json` and `crushing/deepslate_zinc_ore.json` are removed. `blasting/zinc_ingot_from_ore.json` and `blasting/zinc_ingot_from_raw_ore.json` are plain one to one furnace recipes and both survive, and Asurine still crushes to zinc at one to one.
-
-`gilded_blackstone` is in the removal list even though it is not named an ore. It yields 18 gold nuggets, the same as nether gold ore, and leaving it would just make it the obvious workaround.
-
-To loosen: delete the file for that ore from `data/create/recipes/crushing/`.
-
-### 4. Megabuild caps
-
-Two config files, edited by hand. These are not part of the datapack because overwriting another server's config would clobber unrelated settings.
-
-`config/create-server.toml`:
-
-```toml
-[schematics]
-  maxSchematics = 3                        # was 10
-  maxTotalSchematicSize = 24               # was 100000, in KB
-[schematics.schematicannon]
-  schematicannonDelay = 20                 # was 10
-  schematicannonShotsPerGunpowder = 100    # was 400
-```
-
-Create's own default for `maxTotalSchematicSize` is 256. A value of 100000 accepts schematic uploads of roughly 100 MB, about 390 times stock, and that single line is why downloaded megabuilds work. At 24 KB a player's house, station, bridge, or facade still uploads without trouble.
-
-`config/effortless.toml`:
-
-```toml
-[global]
-  maxReachDistance = 32                # was 128
-  maxBlockPlaceVolume = 1024           # was 10000
-  maxBlockBreakVolume = 1024           # was 10000
-  maxBlockInteractVolume = 1024        # was 10000
-  maxStructureCopyPasteVolume = 512    # was 10000
-```
-
-If you run Effortless Building, capping the schematicannon alone accomplishes nothing. Effortless can copy and paste 10,000 blocks from 128 blocks away out of the box, which is a second import pipeline straight past the cap you just set. Mirror, array, and radial building all still work at these numbers.
-
-If you have Axiom installed, confirm it stays disabled on the server. It is a full creative world editor.
-
-To loosen: raise the numbers. They are ordinary config values with no dependencies.
-
-### 5. No infinite lava
-
-`data/create/tags/fluids/bottomless/allow.json`, shipped with `"replace": true` and water only.
-
-A Hose Pulley over a large enough fluid body normally drains it forever. On a Nether lava lake that is unlimited free fuel. Water stays infinite so boilers, and therefore trains, keep working.
-
-This relies on `bottomlessFluidMode` being `ALLOW_BY_TAG` in `create-server.toml`, which is Create's default.
-
-To loosen: add `minecraft:lava` back to the values list, or delete the file.
-
-### 6. Mechanical Arm and Mechanical Harvester removed
-
-Removes the crafting recipes for `create:mechanical_arm` and `create:mechanical_harvester`.
-
-The Mechanical Arm routes items between machines with no player involved, which is the definition of the thing this pack is trying to stop. Nothing else in Create or Steam 'n Rails needs it as an ingredient, so removing it costs nothing downstream.
-
-The Mechanical Harvester only functions as a contraption actor. Its block entity is not kinetic, it takes no rotation, and it does nothing at all when placed on its own. Once change 1 blocks it from contraptions there is no working use left, so leaving it craftable would only be a trap. It is removed rather than left as a dead block.
-
-This is the strictest part of the pack and the first thing to drop if you want a softer ruleset.
-
-To loosen: delete `data/create/recipes/crafting/kinetics/mechanical_arm.json` and `mechanical_harvester.json`. If you restore the harvester, also remove its line from the `non_movable` tag or it will still do nothing.
-
-## What this deliberately does not fix
-
-Worth knowing before you install, so nothing is a surprise later.
-
-**The stationary Deployer still farms.** A Deployer with a sword and a fan is a mob farm, and with the right item it does auto-breeding and bonemeal farms. It cannot be removed. Train Track comes only from `sequenced_assembly/track.json`, whose sequence is two deploying steps, and Precision Mechanism, which gates Train Controls, is five loops of three deploying steps. Removing the Deployer removes trains. No tag or config setting separates "deployer that crafts track" from "deployer that punches a zombie", so this one is left standing on purpose.
-
-**The stationary Drill still makes cobblestone.** Create even ships a dedicated optimisation for cobble generators. It is localized and it does not consume terrain, so it was left alone.
-
-**The Encased Fan still kills mobs** and still does bulk washing, smoking, and blasting.
-
-**Ore crushing recipes for modded ores are only covered at the top level.** The 30 removed recipes include Create's built-in support for aluminum, lead, nickel, osmium, platinum, quicksilver, silver, tin, and uranium, which activate if a mod provides those ores. Create also ships around 70 more crushing recipes under `crushing/compat/` for Silent Gems, Thermal, Elementary Ores, Oh The Biomes We've Gone, Aether, and Druidcraft. Those are not covered. If you run one of those mods, copy any of the shipped override files to the matching path under `data/create/recipes/crushing/compat/` and it will work the same way.
-
-## How the recipe removals work
-
-Each removed recipe is replaced by a file at the same path containing a Fabric resource condition that can never be true:
+`config/createtweaks.json`, created on first run.
 
 ```json
 {
-  "fabric:load_conditions": [
-    {
-      "condition": "fabric:all_mods_loaded",
-      "values": ["create_tweaks_recipe_disabled"]
-    }
-  ],
-  "type": "minecraft:crafting_shapeless",
-  "category": "misc",
-  "ingredients": [{ "item": "minecraft:structure_void" }],
-  "result": { "item": "minecraft:structure_void" }
+  "removeOreDoubling": true,
+  "removeUncraftableRecipes": true,
+  "hideUncraftableItems": true,
+  "deployerCannotAttack": true,
+  "extraOres": []
 }
 ```
 
-The datapack overrides the mod's file, then the condition fails and no recipe registers. The item vanishes from JEI rather than showing an empty or broken entry. Nothing is deleted from the registry, so no block breaks, no chunk fails to load, and uninstalling restores everything.
+`extraOres` adds item ids to the ore rule for ore blocks that are in no conventional ore tag.
+`minecraft:gilded_blackstone` is already handled.
 
-This is why there is no KubeJS script and no mod in this pack. It is one datapack folder and nine edited config lines.
+## Building
 
-## Uninstall
+See [mod/BUILDING.md](mod/BUILDING.md). The short version is that Gradle must run on JDK 17 or 21, not 25.
 
-Delete the zip from wherever you put it and restart. Optionally put the config values back. Nothing persists in the world.
+## Previous versions
 
-Blocks players already built stay where they are. A player holding a Mechanical Arm keeps it.
+Create Tweaks 1.0 was a datapack. It did most of this, but matched recipes by file path, which silently
+breaks if Create renames one, and it could not touch the Deployer at all. It is still available on the
+[v1.0 release](https://github.com/FugginBeenus/create-tweaks/releases/tag/v1.0) and its sources are in git
+history.
 
-## Tuning it for your server
+## License
 
-Every change is one file or one config line, and each section above says what to delete to undo it.
-
-A softer ruleset: keep changes 1, 4, and 5, and drop 2, 3, and 6. That leaves you with no world eaters and no megabuild imports, and everything else stock.
-
-A stricter one: also remove the crafting recipe for `create:mechanical_drill`, which ends stationary cobble generators and stationary mining. Copy any of the shipped override files to `data/create/recipes/crafting/kinetics/mechanical_drill.json`. Note that this does not affect trains, since nothing in the rail progression needs a drill.
+MIT.
