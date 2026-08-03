@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "create:mechanical_drill",
+      "required": false
+    },
+    {
+      "id": "create:mechanical_saw",
+      "required": false
+    },
+    {
+      "id": "create:mechanical_harvester",
+      "required": false
+    },
+    {
+      "id": "create:deployer",
+      "required": false
+    }
+  ]
+}

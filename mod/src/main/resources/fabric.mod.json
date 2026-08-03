@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "createtweaks",
+  "version": "${version}",
+  "name": "Create Tweaks",
+  "description": "Rebalances Create for long-running multiplayer servers. Stationary-only actors, no ore doubling, no auto-crafting, no deployer mob farms, no infinite lava.",
+  "authors": ["FugginBeenus"],
+  "contact": {
+    "homepage": "https://github.com/FugginBeenus/create-tweaks",
+    "sources": "https://github.com/FugginBeenus/create-tweaks",
+    "issues": "https://github.com/FugginBeenus/create-tweaks/issues"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["io.github.fugginbeenus.createtweaks.CreateTweaks"]
+  },
+  "mixins": ["createtweaks.mixins.json"],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=17",
+    "create": ">=6.0.0"
+  }
+}
