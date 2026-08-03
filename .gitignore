@@ -10,3 +10,4 @@ mod/.gradle/
 .idea/
 optional/
 __pycache__/
+logs/
