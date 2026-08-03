@@ -45,7 +45,9 @@ Drop `create-tweaks-1.0.zip` into either place. Do not unzip it.
 
 **`world/datapacks/`** is the normal way and works on any server. It applies to that one world and is enabled automatically on the next load. Confirm with `/datapack list`.
 
-**`config/paxi/datapacks/`** is worth it if you already run [Paxi](https://modrinth.com/mod/paxi). Paxi loads datapacks globally rather than per world, so the pack survives a world reset and applies to every world on the server. Paxi accepts the zip as-is. On startup it logs the datapacks it loaded, so check for `create-tweaks` in that line.
+**`config/paxi/datapacks/`** is worth it if you already run [Paxi](https://modrinth.com/mod/paxi). Paxi loads datapacks globally rather than per world, so the pack survives a world reset and applies to every world on the server. Paxi accepts the zip as-is.
+
+Paxi loads silently, with no startup log line confirming success, so `/datapack list` in game is the only way to check either path. Note that this folder is inside `config/`, not the game directory root. A `datapacks` folder at the top level of a profile or server directory is not read by anything.
 
 Either way, restart the server afterwards.
 
